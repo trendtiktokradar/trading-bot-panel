@@ -26,7 +26,7 @@ select{background:var(--card2);color:var(--tx);border:1px solid var(--bd);border
 .wrap{white-space:normal}td .wrap{text-align:left}.tag{font-size:11px;padding:1px 6px;border-radius:6px;background:var(--card2);border:1px solid var(--bd)}
 @media(max-width:600px){canvas{height:250px}.big{font-size:20px}main{padding:10px}}
 </style></head><body>
-<header><h1>🤖 Bot Paper · Migraciones PumpSwap</h1><span class="pill" style="color:var(--b);border-color:var(--b)">RONDA 2 · 18 variantes (V1–V12 + V13 copia fiel)</span><span class="pill warn">SOLO PAPER · sin claves · sin IA</span><span id="hs" class="pill">…</span><span id="upd" class="mut" style="font-size:12px"></span><span class="pill">PANEL PÚBLICO · solo lectura · datos con retraso</span></header>
+<header><h1>🤖 Bot Paper · Migraciones PumpSwap</h1><span class="pill" style="color:var(--b);border-color:var(--b)">RONDA 2 · 19 variantes (V1–V12 + V13 copia fiel + V13C filtros laxos)</span><span class="pill warn">SOLO PAPER · sin claves · sin IA</span><span id="hs" class="pill">…</span><span id="upd" class="mut" style="font-size:12px"></span><span class="pill">PANEL PÚBLICO · solo lectura · datos con retraso</span></header>
 <div id="alarm"></div><nav id="nav"></nav><main id="main"></main>
 <script src="config.js"></script>
 <script>
@@ -51,8 +51,8 @@ async function loadData(){const c=window.PANEL_CONFIG;const urls=[c.dataUrl,c.fa
 async function J(u){if(!DATA||Date.now()-LAST_LOAD>c_ref())await loadData();const v=DATA[u];if(v===undefined)throw new Error('falta '+u);return v}
 function c_ref(){return (window.PANEL_CONFIG.refreshSeconds||60)*1000}
 const PAL_A=['#e6194b','#3cb44b','#ffe119','#4363d8','#f58231','#911eb4','#46f0f0','#f032e6','#bcf60c','#fabebe','#00a5a5','#c9a0ff'];
-const PAL_B=['#ff6b6b','#4dd0e1','#ffd54f','#81c784','#ba68c8','#ff8a65'];
-const DASH_A=i=>[[],[9,4],[2,3]][Math.floor(i/4)%3], DASH_B=i=>i<3?[]:[9,4];
+const PAL_B=['#ff6b6b','#4dd0e1','#ffd54f','#81c784','#ba68c8','#ff8a65','#ffffff'];
+const DASH_A=i=>[[],[9,4],[2,3]][Math.floor(i/4)%3], DASH_B=i=>i<3?[]:i<6?[9,4]:[2,3];
 const CHS={};
 function mountChart(id,series,names,meta,pal,dashFn,bank){
  const box=document.getElementById(id);if(!box)return;
@@ -113,9 +113,9 @@ async function render(){document.querySelectorAll('nav button').forEach(b=>b.cla
   <div class="card"><h3>Migraciones vistas (24 h)</h3><div class="big">${Object.values(s).reduce((a,b)=>a+b,0)}</div><div class="mut">aceptadas ${s.accepted||0} · rechazadas ${s.rejected||0} · en evaluación ${s.evaluating||0}</div></div>
   <div class="card"><h3>Último evento</h3><div class="big" style="font-size:18px">${ago(h.last_signal_ts?o.now-h.last_signal_ts:null)}</div><div class="mut">SOL = ${f(h.sol_usd,2)} USD</div></div></div>
   <div class="sec">Curva de equity · V1–V12 (pruebas de estrategia) · SOL, banco inicial ${o.bank_start} por variante</div><div id="eqA"></div>
-  <div class="sec">Curva de equity · V13 (copias fieles de s1mple / bigPNL / ro1x) · línea continua = V13A, discontinua = V13B</div><div id="eqB"></div>
+  <div class="sec">Curva de equity · V13 (copias fieles de s1mple / bigPNL / ro1x) · continua = V13A, discontinua = V13B, punteada blanca = V13C (filtros laxos)</div><div id="eqB"></div>
   <p class="note">Pasa el ratón (o toca) sobre una línea para ver la variante, su descripción y su equity/PnL en ese punto; pulsa un elemento de la leyenda para ocultar/mostrar su línea. La línea punteada gris es el banco inicial.</p>
-  <div class="sec">Comparación de las 18 variantes (ronda 2 · todas con ${o.size_sol} SOL · banco inicial ${o.bank_start} SOL cada una)</div>${fmtRows(o.variants,VCOLS.concat([EXC]))}
+  <div class="sec">Comparación de las 19 variantes (ronda 2 · todas con ${o.size_sol} SOL · banco inicial ${o.bank_start} SOL cada una)</div>${fmtRows(o.variants,VCOLS.concat([EXC]))}
   <p class="note">Muestra pequeña al principio: no saques conclusiones hasta ≥150 trades por variante. Costes simulados: comisión DEX ${o.costs.dex_fee_pct} % + slippage extra ${o.costs.extra_slippage_pct} % por lado (sensibilidad; ronda 1: 0,5 %) + impacto real + ${f(o.costs.tx_cost_sol,5)} SOL por tx (medido en las wallets).</p>
   <div class="sec">Referencia (baseline) · sin costes ni retraso, vende a los ${280/60|0} min</div>${fmtRows(o.baseline.map(b=>({...b,kind:b.kind=='accepted'?'Aceptadas (lo que filtramos)':'Rechazadas (sombra)'})),[['Grupo',r=>r.kind],['N',r=>r.n],['Retorno medio',r=>pct(r.avg)],['% positivas',r=>f(r.wr,0)+'%'],['Máx. medio',r=>pct(r.maxr)],['Mín. medio',r=>pct(r.minr)]])}
   <p class="note">La sombra de rechazadas sirve para comprobar si los filtros descartan lo correcto: si tienen mejor retorno que las aceptadas, hay que aflojar umbrales.</p>`;
