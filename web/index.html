@@ -19,12 +19,12 @@ main{padding:14px;max-width:1300px;margin:auto}.grid{display:grid;gap:12px;grid-
 table{border-collapse:collapse;width:100%;font-size:13px}th,td{padding:7px 9px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--bd)}
 th{color:var(--mut);font-weight:600;background:var(--card2);position:sticky;top:0}td:first-child,th:first-child{text-align:left}
 tr:last-child td{border-bottom:none}.l{text-align:left}a{color:var(--b);text-decoration:none}
-canvas{width:100%;height:260px;background:var(--card);border:1px solid var(--bd);border-radius:12px}
-.legend{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0;font-size:12px}.legend span{display:flex;align-items:center;gap:5px;cursor:pointer}.legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+canvas{width:100%;height:300px;display:block;background:var(--card);border:1px solid var(--bd);border-radius:12px}
+.lg{display:flex;flex-wrap:wrap;gap:6px 8px;margin:6px 0 8px;font-size:12px}.li{display:flex;align-items:center;gap:6px;cursor:pointer;padding:3px 8px;border-radius:8px;border:1px solid var(--bd);background:var(--card2);user-select:none}.li.off{opacity:.35;text-decoration:line-through}.li.hl{border-color:var(--tx)}.cw{position:relative}.tip{position:absolute;pointer-events:none;background:#0b0e14f5;border:1px solid var(--bd);border-radius:10px;padding:8px 10px;font-size:12px;max-width:min(320px,86vw);z-index:4;box-shadow:0 6px 20px #0008}.legend{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0;font-size:12px}.legend span{display:flex;align-items:center;gap:5px;cursor:pointer}.legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
 .note{font-size:12px;color:var(--mut);margin:6px 2px}.hide{display:none}
 select{background:var(--card2);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:5px}
 .wrap{white-space:normal}td .wrap{text-align:left}.tag{font-size:11px;padding:1px 6px;border-radius:6px;background:var(--card2);border:1px solid var(--bd)}
-@media(max-width:600px){.big{font-size:20px}main{padding:10px}}
+@media(max-width:600px){canvas{height:250px}.big{font-size:20px}main{padding:10px}}
 </style></head><body>
 <header><h1>🤖 Bot Paper · Migraciones PumpSwap</h1><span class="pill" style="color:var(--b);border-color:var(--b)">RONDA 2 · 18 variantes (V1–V12 + V13 copia fiel)</span><span class="pill warn">SOLO PAPER · sin claves · sin IA</span><span id="hs" class="pill">…</span><span id="upd" class="mut" style="font-size:12px"></span><span class="pill">PANEL PÚBLICO · solo lectura · datos con retraso</span></header>
 <div id="alarm"></div><nav id="nav"></nav><main id="main"></main>
@@ -50,14 +50,51 @@ async function loadData(){const c=window.PANEL_CONFIG;const urls=[c.dataUrl,c.fa
  throw new Error('no se pudo cargar data.json')}
 async function J(u){if(!DATA||Date.now()-LAST_LOAD>c_ref())await loadData();const v=DATA[u];if(v===undefined)throw new Error('falta '+u);return v}
 function c_ref(){return (window.PANEL_CONFIG.refreshSeconds||60)*1000}
-function chart(el,series){const c=el,dpr=devicePixelRatio||1,W=c.clientWidth,H=c.clientHeight;c.width=W*dpr;c.height=H*dpr;const x=c.getContext('2d');x.scale(dpr,dpr);
- const names=Object.keys(series).filter(k=>!hid[k]&&series[k].length);if(!names.length){x.fillStyle='#8a94ad';x.fillText('Aún sin datos',14,24);return}
- let t0=1e99,t1=0,y0=1e99,y1=-1e99;names.forEach(k=>series[k].forEach(p=>{t0=Math.min(t0,p.ts);t1=Math.max(t1,p.ts);y0=Math.min(y0,p.equity);y1=Math.max(y1,p.equity)}));
- if(y1-y0<1e-6){y0-=.01;y1+=.01}const pad=(y1-y0)*.1;y0-=pad;y1+=pad;if(t1==t0)t1=t0+1;const L=48,B=20,T=8,R=8;
- x.strokeStyle='#222b3f';x.fillStyle='#8a94ad';x.font='11px system-ui';for(let i=0;i<=4;i++){const y=T+(H-T-B)*i/4;x.beginPath();x.moveTo(L,y);x.lineTo(W-R,y);x.stroke();x.fillText(f(y1-(y1-y0)*i/4,3),2,y+4)}
- for(let i=0;i<=3;i++){const tt=t0+(t1-t0)*i/3;x.fillText(new Date(tt*1000).toLocaleTimeString('es-ES',{timeZone:TZ,hour:'2-digit',minute:'2-digit'}),L+(W-L-R)*i/3-14,H-5)}
- Object.keys(series).forEach((k,ix)=>{if(hid[k]||!series[k].length)return;x.strokeStyle=COLORS[ix%12];x.lineWidth=1.6;x.beginPath();series[k].forEach((p,i)=>{const px=L+(p.ts-t0)/(t1-t0)*(W-L-R),py=T+(1-(p.equity-y0)/(y1-y0))*(H-T-B);i?x.lineTo(px,py):x.moveTo(px,py)});x.stroke()})}
-function legend(series){return `<div class="legend">${Object.keys(series).map((k,i)=>`<span data-v="${k}" style="opacity:${hid[k]?.35:1}"><i style="background:${COLORS[i%12]}"></i>${k}</span>`).join('')}</div>`}
+const PAL_A=['#e6194b','#3cb44b','#ffe119','#4363d8','#f58231','#911eb4','#46f0f0','#f032e6','#bcf60c','#fabebe','#00a5a5','#c9a0ff'];
+const PAL_B=['#ff6b6b','#4dd0e1','#ffd54f','#81c784','#ba68c8','#ff8a65'];
+const DASH_A=i=>[[],[9,4],[2,3]][Math.floor(i/4)%3], DASH_B=i=>i<3?[]:[9,4];
+const CHS={};
+function mountChart(id,series,names,meta,pal,dashFn,bank){
+ const box=document.getElementById(id);if(!box)return;
+ const cfg=names.map((k,i)=>({k,color:pal[i%pal.length],dash:dashFn(i),m:meta[k]||{}}));
+ box.innerHTML=`<div class="lg">${cfg.map(c=>`<span class="li" data-v="${c.k}" title="${(c.m.nombre||'').replace(/"/g,'')}"><svg width="30" height="10"><line x1="1" y1="5" x2="29" y2="5" stroke="${c.color}" stroke-width="3" stroke-dasharray="${c.dash.join(' ')}"/></svg><b>${c.k}</b></span>`).join('')}</div><div class="cw"><canvas></canvas><div class="tip hide"></div></div>`;
+ const cv=box.querySelector('canvas'),tip=box.querySelector('.tip'),lg=box.querySelector('.lg');let hov=null,G=null,pin=null;
+ const sync=()=>lg.querySelectorAll('.li').forEach(e=>{e.classList.toggle('off',!!hid[e.dataset.v]);e.classList.toggle('hl',hov===e.dataset.v)});
+ function draw(){const dpr=devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;cv.width=W*dpr;cv.height=H*dpr;const x=cv.getContext('2d');x.scale(dpr,dpr);
+  const vis=cfg.filter(c=>!hid[c.k]&&(series[c.k]||[]).length);G=null;
+  if(!vis.length){x.fillStyle='#8a94ad';x.font='13px system-ui';x.fillText(cfg.some(c=>(series[c.k]||[]).length)?'Todas las líneas ocultas (pulsa la leyenda)':'Aún sin datos',14,26);return}
+  let t0=1e99,t1=0,y0=1e99,y1=-1e99;vis.forEach(c=>series[c.k].forEach(p=>{t0=Math.min(t0,p.ts);t1=Math.max(t1,p.ts);y0=Math.min(y0,p.equity);y1=Math.max(y1,p.equity)}));
+  if(y1-y0<1e-6){y0-=.01;y1+=.01}const pad=(y1-y0)*.1;y0-=pad;y1+=pad;if(t1==t0)t1=t0+1;const L=48,B=20,T=8,R=8;
+  const PX=t=>L+(t-t0)/(t1-t0)*(W-L-R),PY=v=>T+(1-(v-y0)/(y1-y0))*(H-T-B);G={PX,PY,t0,t1,L,R,W,H,vis};
+  x.strokeStyle='#222b3f';x.fillStyle='#8a94ad';x.font='11px system-ui';x.lineWidth=1;x.setLineDash([]);
+  for(let i=0;i<=4;i++){const y=T+(H-T-B)*i/4;x.beginPath();x.moveTo(L,y);x.lineTo(W-R,y);x.stroke();x.fillText(f(y1-(y1-y0)*i/4,3),2,y+4)}
+  if(bank>=y0&&bank<=y1){x.strokeStyle='#8a94ad66';x.setLineDash([2,4]);x.beginPath();x.moveTo(L,PY(bank));x.lineTo(W-R,PY(bank));x.stroke();x.setLineDash([])}
+  for(let i=0;i<=3;i++){const tt=t0+(t1-t0)*i/3;x.fillText(new Date(tt*1000).toLocaleTimeString('es-ES',{timeZone:TZ,hour:'2-digit',minute:'2-digit'}),L+(W-L-R)*i/3-14,H-5)}
+  const order=vis.filter(c=>c.k!==hov).concat(vis.filter(c=>c.k===hov));
+  order.forEach(c=>{const on=hov===c.k;x.globalAlpha=hov&&!on?0.14:1;x.strokeStyle=c.color;x.lineWidth=on?3.4:1.9;x.setLineDash(c.dash);x.lineJoin='round';x.beginPath();series[c.k].forEach((p,i)=>{const px=PX(p.ts),py=PY(p.equity);i?x.lineTo(px,py):x.moveTo(px,py)});x.stroke()});
+  x.globalAlpha=1;x.setLineDash([]);
+  if(pin&&hov){const c=cfg.find(z=>z.k===hov),p=pin.p;x.fillStyle=c.color;x.strokeStyle='#0b0e14';x.lineWidth=2;x.beginPath();x.arc(PX(p.ts),PY(p.equity),5,0,7);x.fill();x.stroke()}}
+ function hit(ev,touch){if(!G)return null;const r=cv.getBoundingClientRect(),mx=ev.clientX-r.left,my=ev.clientY-r.top,th=touch?24:14;let best=null;
+  G.vis.forEach(c=>{const s=series[c.k];for(let i=0;i<s.length;i++){const ax=G.PX(s[i].ts),ay=G.PY(s[i].equity);let d=Math.hypot(ax-mx,ay-my);
+    if(i+1<s.length){const bx=G.PX(s[i+1].ts),by=G.PY(s[i+1].equity),dx=bx-ax,dy=by-ay,l2=dx*dx+dy*dy;if(l2>0){const u=Math.max(0,Math.min(1,((mx-ax)*dx+(my-ay)*dy)/l2));d=Math.min(d,Math.hypot(ax+u*dx-mx,ay+u*dy-my))}}
+    if(d<th&&(!best||d<best.d))best={d,c}}});
+  if(!best)return null;const s=series[best.c.k],tx=G.t0+(mx-G.L)/(G.W-G.L-G.R)*(G.t1-G.t0);let p=s[0];s.forEach(q=>{if(Math.abs(q.ts-tx)<Math.abs(p.ts-tx))p=q});return {c:best.c,p,mx,my}}
+ function show(h){window.HOVERING=!!h;if(!h){hov=null;pin=null;tip.classList.add('hide');draw();sync();return}
+  hov=h.c.k;pin=h;draw();sync();const m=h.c.m,pnl=h.p.equity-bank;
+  tip.innerHTML=`<div><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${h.c.color};margin-right:6px"></i><b>${h.c.k}</b> · ${m.nombre||''}</div><div class="mut" style="margin:4px 0;white-space:normal">${m.desc||''}</div><div>Equity: <b>${f(h.p.equity,4)}</b> SOL · PnL ${sol(pnl)} SOL</div><div class="mut">${tm(h.p.ts)}${m.n!=null?` · ${m.n} trades cerrados · PnL neto actual ${sol(m.pnl)}`:''}</div>`;
+  tip.classList.remove('hide');const tw=tip.offsetWidth,th=tip.offsetHeight,W=cv.clientWidth,H=cv.clientHeight;
+  tip.style.left=Math.max(4,Math.min(W-tw-4,h.mx+14))+'px';tip.style.top=Math.max(4,Math.min(H-th-4,h.my>H/2?h.my-th-12:h.my+16))+'px'}
+ cv.style.touchAction='pan-y';
+ cv.addEventListener('pointermove',e=>{const h=hit(e,e.pointerType!=='mouse');if(e.pointerType==='mouse'||h)show(h)});
+ cv.addEventListener('pointerdown',e=>show(hit(e,e.pointerType!=='mouse')));
+ cv.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse')show(null)});
+ lg.addEventListener('click',e=>{const v=e.target.closest('.li')?.dataset.v;if(v){hid[v]=!hid[v];if(hov===v)hov=null;pin=null;tip.classList.add('hide');draw();sync()}});
+ lg.addEventListener('mouseover',e=>{const v=e.target.closest('.li')?.dataset.v;if(v&&hov!==v&&!hid[v]){hov=v;pin=null;tip.classList.add('hide');draw();sync()}});
+ lg.addEventListener('mouseleave',()=>{if(hov){hov=null;draw();sync()}});
+ draw();sync();CHS[id]=draw}
+window.addEventListener('resize',()=>Object.values(CHS).forEach(d=>{try{d()}catch(e){}}));
+function equityCharts(o,eq){const meta={};o.variants.forEach(v=>meta[v.variant]=v);const ids=o.variants.map(v=>v.variant),A=ids.filter(v=>!v.startsWith('V13')),B=ids.filter(v=>v.startsWith('V13'));
+ mountChart('eqA',eq,A,meta,PAL_A,DASH_A,o.bank_start);mountChart('eqB',eq,B,meta,PAL_B,DASH_B,o.bank_start)}
 function fmtRows(rows,cols){return `<div class="tw"><table><thead><tr>${cols.map(c=>`<th>${c[0]}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td>${c[1](r)}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${cols.length}" class="mut l">Sin datos todavía</td></tr>`}</tbody></table></div>`}
 async function header(){const h=await J('/api/health');$('#alarm').innerHTML=(h.alarms&&h.alarms.alarmas||[]).map(a=>`<div class="card bad" style="margin:8px 14px">⚠️ ${a}</div>`).join('');$('#hs').innerHTML=h.ok?'<span class="ok">● bot vivo</span>':'<span class="bad">● bot parado/atascado</span>';const ag=Date.now()/1000-DATA_TS;$('#upd').innerHTML='datos de '+tm(DATA_TS)+' · <span class="'+(ag>900?'bad':'mut')+'">hace '+dur(ag)+'</span> · se renuevan cada ~4 min';return h}
 const NAMEC=r=>`<b>${r.variant}</b> ${r.ronda==1?'<span class="tag" style="color:var(--y);border-color:var(--y)">HISTÓRICO · ronda 1</span>':OR(r.origen)}<br><span class="wrap mut" style="display:block;font-size:12px">${r.nombre||''}</span>`;
@@ -75,12 +112,14 @@ async function render(){document.querySelectorAll('nav button').forEach(b=>b.cla
   <div class="card"><h3>Ronda 1 (histórico)</h3><div class="big">${sol((o.legacy||[]).reduce((a,v)=>a+v.pnl,0))} SOL</div><div class="mut">${(o.legacy||[]).reduce((a,v)=>a+v.n,0)} trades · stop −36 %/obj. +43 %, 0,05–1,5 SOL</div></div>
   <div class="card"><h3>Migraciones vistas (24 h)</h3><div class="big">${Object.values(s).reduce((a,b)=>a+b,0)}</div><div class="mut">aceptadas ${s.accepted||0} · rechazadas ${s.rejected||0} · en evaluación ${s.evaluating||0}</div></div>
   <div class="card"><h3>Último evento</h3><div class="big" style="font-size:18px">${ago(h.last_signal_ts?o.now-h.last_signal_ts:null)}</div><div class="mut">SOL = ${f(h.sol_usd,2)} USD</div></div></div>
-  <div class="sec">Curva de equity por variante (SOL, banco inicial ${o.bank_start} por variante)</div>${legend(eq)}<canvas id="cv"></canvas>
+  <div class="sec">Curva de equity · V1–V12 (pruebas de estrategia) · SOL, banco inicial ${o.bank_start} por variante</div><div id="eqA"></div>
+  <div class="sec">Curva de equity · V13 (copias fieles de s1mple / bigPNL / ro1x) · línea continua = V13A, discontinua = V13B</div><div id="eqB"></div>
+  <p class="note">Pasa el ratón (o toca) sobre una línea para ver la variante, su descripción y su equity/PnL en ese punto; pulsa un elemento de la leyenda para ocultar/mostrar su línea. La línea punteada gris es el banco inicial.</p>
   <div class="sec">Comparación de las 18 variantes (ronda 2 · todas con ${o.size_sol} SOL · banco inicial ${o.bank_start} SOL cada una)</div>${fmtRows(o.variants,VCOLS.concat([EXC]))}
   <p class="note">Muestra pequeña al principio: no saques conclusiones hasta ≥150 trades por variante. Costes simulados: comisión DEX ${o.costs.dex_fee_pct} % + slippage extra ${o.costs.extra_slippage_pct} % por lado (sensibilidad; ronda 1: 0,5 %) + impacto real + ${f(o.costs.tx_cost_sol,5)} SOL por tx (medido en las wallets).</p>
   <div class="sec">Referencia (baseline) · sin costes ni retraso, vende a los ${280/60|0} min</div>${fmtRows(o.baseline.map(b=>({...b,kind:b.kind=='accepted'?'Aceptadas (lo que filtramos)':'Rechazadas (sombra)'})),[['Grupo',r=>r.kind],['N',r=>r.n],['Retorno medio',r=>pct(r.avg)],['% positivas',r=>f(r.wr,0)+'%'],['Máx. medio',r=>pct(r.maxr)],['Mín. medio',r=>pct(r.minr)]])}
   <p class="note">La sombra de rechazadas sirve para comprobar si los filtros descartan lo correcto: si tienen mejor retorno que las aceptadas, hay que aflojar umbrales.</p>`;
-  chart($('#cv'),eq);$('.legend').onclick=e=>{const v=e.target.closest('span')?.dataset.v;if(v){hid[v]=!hid[v];render()}}}
+  equityCharts(o,eq)}
  else if(tab=='var'){const o=await J('/api/overview');PROF=o.profiles||PROF;M.innerHTML=`<div class="sec">Ronda 2 · comparación de estrategias (mismo tamaño: ${o.size_sol} SOL)</div>${fmtRows(o.variants,VCOLS.concat([EXC]))}
   <p class="note">Cada variante tiene su propia puerta de entrada y/o salida; las señales que no cumplen la puerta de una variante no las abre (así la muestra crece de forma independiente). PnL neto de comisiones DEX, slippage, red, prioridad, tip y rent. Slippage extra ${o.costs.extra_slippage_pct} % por lado = <b>sensibilidad documentada</b>; ${o.costs.nota}</p>
   <div class="sec">Perfiles de salida</div>${fmtRows(Object.entries(o.profiles).map(([k,v])=>({k,...v})).sort((a,b)=>(b.activo-a.activo)),[['Perfil',r=>`<b>${r.k}</b>${r.hazard?' <span class="tag">temporizador hazard</span>':''}<br><span class="wrap mut" style="font-size:12px">${r.nombre}</span>`],['Estado',r=>r.activo?'<span class="ok">activo · '+r.usado_por.join(', ')+'</span>':'<span class="tag" style="color:var(--y);border-color:var(--y)">retirado · ronda 1</span>'],['Origen',r=>OR(r.origen)],['Corte tiempo',r=>dur(r.time_cut_s)],['Stop',r=>r.stop==null?'sin stop (solo emergencia de liquidez)':r.stop+' %'],['Objetivo',r=>r.tp.length?r.tp.map(t=>'+'+t.at_pct+'% vende '+Math.round(t.sell_frac*100)+'%').join(' · '):'sin objetivo'],['Trailing',r=>r.trailing?`activo +${r.trailing[0]}%, cede ${r.trailing[1]}%`:'no']])}
@@ -131,5 +170,5 @@ async function render(){document.querySelectorAll('nav button').forEach(b=>b.cla
   <b>Límites</b>: es paper; la latencia real y la competencia pueden empeorar los fills. Detalles en el README.</div>
   <div class="sec">Configuración activa (config.yaml)</div><div class="card"><pre style="margin:0;white-space:pre-wrap;font-size:12px">${JSON.stringify(c,null,1)}</pre></div>`}
  }catch(e){M.innerHTML=`<div class="card bad">Error cargando datos: ${e}</div>`}}
-render();let tick=0;setInterval(()=>{tick++;if(!document.hidden&&(tab=='cer'||tick%3==0))render()},5000);
+render();let tick=0;setInterval(()=>{tick++;if(!document.hidden&&!window.HOVERING&&(tab=='cer'||tick%3==0))render()},5000);
 </script></body></html>
