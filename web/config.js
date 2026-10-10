@@ -7,6 +7,6 @@
   window.PANEL_CONFIG = {
     dataUrl: local || GITHUB_USER.indexOf("__") === 0 ? "data.json" : remote,
     fallbackUrl: "data.json",
-    refreshSeconds: 90
+    refreshSeconds: 30
   };
 })();
