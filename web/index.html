@@ -34,7 +34,7 @@ select{background:var(--card2);color:var(--tx);border:1px solid var(--bd);border
 @media(max-width:600px){canvas{height:340px}.big{font-size:20px}main{padding:10px}}
 .bar{display:inline-block;width:110px;height:8px;background:#222;border-radius:4px;vertical-align:middle;overflow:hidden}.bar i{display:block;height:100%;background:var(--g)}
 </style></head><body>
-<header><h1>🤖 Bot Paper · Migraciones PumpSwap</h1><span class="pill" style="color:var(--b);border-color:var(--b)">RONDA 2 · 19 variantes (V1–V12 + V13 copia fiel + V13C filtros laxos)</span><span class="pill warn">SOLO PAPER · sin claves · sin IA</span><span id="hs" class="pill">…</span><span id="upd" class="mut" style="font-size:12px"></span><span class="pill">PANEL PÚBLICO · solo lectura · datos con retraso</span></header>
+<header><h1>🤖 Bot Paper · Migraciones PumpSwap</h1><span class="pill" style="color:var(--b);border-color:var(--b)">RONDA 2 · 22 variantes (V1–V12 + V13 copia fiel + V13C + ronda 3: V14–V16)</span><span class="pill warn">SOLO PAPER · sin claves · sin IA</span><span id="hs" class="pill">…</span><span id="upd" class="mut" style="font-size:12px"></span><span class="pill">PANEL PÚBLICO · solo lectura · datos con retraso</span></header>
 <div id="alarm"></div><nav id="nav"></nav><main id="main"></main>
 <script src="config.js"></script>
 <script>
@@ -61,6 +61,7 @@ async function J(u){if(!DATA||Date.now()-LAST_LOAD>c_ref())await loadData();cons
 setInterval(()=>{const e=document.getElementById('ago');if(e&&DATA){const a=Date.now()/1000-DATA_TS;e.textContent='hace '+dur(a);e.className=a>900?'bad':'mut'}},1000);
 function c_ref(){return (window.PANEL_CONFIG.refreshSeconds||60)*1000}
 const PAL_A=['#e6194b','#3cb44b','#ffe119','#4363d8','#f58231','#911eb4','#46f0f0','#f032e6','#bcf60c','#fabebe','#00a5a5','#c9a0ff'];
+const PAL_C=['#00e676','#ff4081','#ffab00'],DASH_C=i=>[[],[9,4],[2,3]][i%3],ISC=v=>/^V1[4-9]$/.test(v);
 const PAL_B=['#ff6b6b','#4dd0e1','#ffd54f','#81c784','#ba68c8','#ff8a65','#ffffff'];
 const DASH_A=i=>[[],[9,4],[2,3]][Math.floor(i/4)%3], DASH_B=i=>i<3?[]:i<6?[9,4]:[2,3];
 const CHS={};
@@ -110,12 +111,12 @@ function mountChart(id,series0,names,meta,pal,dashFn,bank){
  box.querySelector('.cb').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.r){st.range=b.dataset.r;box.querySelectorAll('[data-r]').forEach(x=>x.classList.toggle('on',x===b))}else if(b.dataset.n){st.norm=!st.norm;b.classList.toggle('on',st.norm)}else if(b.dataset.all){cfg.forEach(c=>hid[c.k]=false)}hov=null;pin=null;tip.classList.add('hide');draw();sync()});
  draw();sync();CHS[id]=draw}
 window.addEventListener('resize',()=>Object.values(CHS).forEach(d=>{try{d()}catch(e){}}));
-function equityCharts(o,eq){const meta={};o.variants.forEach(v=>meta[v.variant]=v);const ids=o.variants.map(v=>v.variant),A=ids.filter(v=>!v.startsWith('V13')),B=ids.filter(v=>v.startsWith('V13'));
- mountChart('eqA',eq,A,meta,PAL_A,DASH_A,o.bank_start);mountChart('eqB',eq,B,meta,PAL_B,DASH_B,o.bank_start)}
+function equityCharts(o,eq){const meta={};o.variants.forEach(v=>meta[v.variant]=v);const ids=o.variants.map(v=>v.variant),A=ids.filter(v=>!v.startsWith('V13')&&!ISC(v)),B=ids.filter(v=>v.startsWith('V13')),Cc=ids.filter(ISC);
+ mountChart('eqA',eq,A,meta,PAL_A,DASH_A,o.bank_start);mountChart('eqB',eq,B,meta,PAL_B,DASH_B,o.bank_start);if(Cc.length)mountChart('eqC',eq,Cc,meta,PAL_C,DASH_C,o.bank_start)}
 
 const MR={r:'todo'},JOINT={open:false};
-function equityBoard(o,eq){const ids=o.variants.map(v=>v.variant),A=ids.filter(v=>!v.startsWith('V13')),B=ids.filter(v=>v.startsWith('V13')),bank=o.bank_start,meta={};o.variants.forEach(v=>meta[v.variant]=v);
- const col={},dsh={};A.forEach((k,i)=>{col[k]=PAL_A[i%PAL_A.length];dsh[k]=DASH_A(i)});B.forEach((k,i)=>{col[k]=PAL_B[i%PAL_B.length];dsh[k]=DASH_B(i)});
+function equityBoard(o,eq){const ids=o.variants.map(v=>v.variant),A=ids.filter(v=>!v.startsWith('V13')&&!ISC(v)),B=ids.filter(v=>v.startsWith('V13')),Cc=ids.filter(ISC),bank=o.bank_start,meta={};o.variants.forEach(v=>meta[v.variant]=v);
+ const col={},dsh={};A.forEach((k,i)=>{col[k]=PAL_A[i%PAL_A.length];dsh[k]=DASH_A(i)});B.forEach((k,i)=>{col[k]=PAL_B[i%PAL_B.length];dsh[k]=DASH_B(i)});Cc.forEach((k,i)=>{col[k]=PAL_C[i%PAL_C.length];dsh[k]=DASH_C(i)});
  const last=k=>{const a=eq[k]||[];return a.length?a[a.length-1].equity-bank:0};
  const order=ids.slice().sort((x,y)=>last(y)-last(x)),mx=Math.max(.01,...order.map(k=>Math.abs(last(k))));
  const bx=$('#bars');if(!bx)return;
@@ -139,9 +140,9 @@ function equityBoard(o,eq){const ids=o.variants.map(v=>v.variant),A=ids.filter(v
  const iso=k=>{Object.keys(hid).forEach(z=>delete hid[z]);ids.forEach(z=>{hid[z]=z!=k});JOINT.open=true;const d=$('#joint');d.open=true;Object.values(CHS).forEach(f=>{try{f()}catch(e){}});d.scrollIntoView({behavior:'smooth',block:'start'})};
  bx.onclick=e=>{const r=e.target.closest('.br');if(r)iso(r.dataset.v)};
  mn.onclick=e=>{const r=e.target.closest('.mc');if(r)iso(r.dataset.v)};
- $('#mrange').onclick=e=>{const b=e.target.closest('button');if(!b)return;MR.r=b.dataset.mr;$('#mrange').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));['eqA','eqB'].forEach(i=>{if(CST[i])CST[i].range=MR.r});document.querySelectorAll('.cw').forEach(()=>{});MD.forEach(f=>f());
+ $('#mrange').onclick=e=>{const b=e.target.closest('button');if(!b)return;MR.r=b.dataset.mr;$('#mrange').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));['eqA','eqB','eqC'].forEach(i=>{if(CST[i])CST[i].range=MR.r});document.querySelectorAll('.cw').forEach(()=>{});MD.forEach(f=>f());
   document.querySelectorAll('#joint .cb [data-r]').forEach(x=>x.classList.toggle('on',x.dataset.r==MR.r));Object.values(CHS).forEach(f=>{try{f()}catch(e){}})};
- if(CST.eqA)CST.eqA.range=MR.r;if(CST.eqB)CST.eqB.range=MR.r;
+ ['eqA','eqB','eqC'].forEach(i=>{if(CST[i])CST[i].range=MR.r});
  const jd=$('#joint');jd.ontoggle=()=>{JOINT.open=jd.open;if(jd.open)Object.values(CHS).forEach(f=>{try{f()}catch(e){}})};
  window.addEventListener('resize',()=>MD.forEach(f=>f()))}
 function fmtRows(rows,cols){return `<div class="tw"><table><thead><tr>${cols.map(c=>`<th>${c[0]}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td>${c[1](r)}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${cols.length}" class="mut l">Sin datos todavía</td></tr>`}</tbody></table></div>`}
@@ -166,9 +167,10 @@ async function render(){document.querySelectorAll('nav button').forEach(b=>b.cla
   <details id="joint" ${JOINT.open?'open':''}><summary>Ver curvas juntas</summary>
   <div class="sec">Curva de equity · V1–V12 (pruebas de estrategia) · SOL, banco inicial ${o.bank_start} por variante</div><div id="eqA"></div>
   <div class="sec">Curva de equity · V13 (copias fieles de s1mple / bigPNL / ro1x) · continua = V13A, discontinua = V13B, punteada blanca = V13C (filtros laxos)</div><div id="eqB"></div>
+  <div class="sec">Curva de equity · ronda 3 (V14–V16: filtros más laxos y salidas cortas, experimentos del replay offline)</div><div id="eqC"></div>
   </details>
   <p class="note">Pasa el ratón (o toca) sobre una línea para ver la variante, su descripción y su equity/PnL en ese punto; pulsa un elemento de la leyenda para ocultar/mostrar su línea. La línea punteada gris es el banco inicial.</p>
-  <div class="sec">Comparación de las 19 variantes (ronda 2 · todas con ${o.size_sol} SOL · banco inicial ${o.bank_start} SOL cada una)</div>${fmtRows(o.variants,VCOLS.concat([EXC]))}
+  <div class="sec">Comparación de las ${o.variants.length} variantes (ronda 2 · todas con ${o.size_sol} SOL · banco inicial ${o.bank_start} SOL cada una)</div>${fmtRows(o.variants,VCOLS.concat([EXC]))}
   <p class="note">Muestra pequeña al principio: no saques conclusiones hasta ≥150 trades por variante. Costes simulados: comisión DEX ${o.costs.dex_fee_pct} % + slippage extra ${o.costs.extra_slippage_pct} % por lado (sensibilidad; ronda 1: 0,5 %) + impacto real + ${f(o.costs.tx_cost_sol,5)} SOL por tx (medido en las wallets).</p>
   <div class="sec">Referencia (baseline) · sin costes ni retraso, vende a los ${280/60|0} min</div>${fmtRows(o.baseline.map(b=>({...b,kind:b.kind=='accepted'?'Aceptadas (lo que filtramos)':'Rechazadas (sombra)'})),[['Grupo',r=>r.kind],['N',r=>r.n],['Retorno medio',r=>pct(r.avg)],['% positivas',r=>f(r.wr,0)+'%'],['Máx. medio',r=>pct(r.maxr)],['Mín. medio',r=>pct(r.minr)]])}
   <p class="note">La sombra de rechazadas sirve para comprobar si los filtros descartan lo correcto: si tienen mejor retorno que las aceptadas, hay que aflojar umbrales.</p>`;
