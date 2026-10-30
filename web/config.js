@@ -6,6 +6,7 @@
   var remote = "https://raw.githubusercontent.com/" + GITHUB_USER + "/" + GITHUB_REPO + "/data/data.json";
   window.PANEL_CONFIG = {
     dataUrl: local || GITHUB_USER.indexOf("__") === 0 ? "data.json" : remote,
+    proxyUrl: local || GITHUB_USER.indexOf("__") === 0 ? null : "/live/data.json",
     fallbackUrl: "data.json",
     refreshSeconds: 30
   };

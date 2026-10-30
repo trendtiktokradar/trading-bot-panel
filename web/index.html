@@ -55,7 +55,7 @@ const OR=o=>o=='copia_fiel'?'<span class="tag" style="color:var(--g);border-colo
 $('#nav').innerHTML=TABS.map(([k,n])=>`<button data-k="${k}">${n}</button>`).join('');
 $('#nav').onclick=e=>{if(e.target.dataset.k){tab=localStorage.tab=e.target.dataset.k;render()}};
 let DATA=null,DATA_TS=Date.now()/1000,LAST_LOAD=0;
-async function loadData(){const c=window.PANEL_CONFIG;const urls=[c.dataUrl,c.fallbackUrl];
+async function loadData(){const c=window.PANEL_CONFIG;const urls=[c.proxyUrl,c.dataUrl,c.fallbackUrl].filter(Boolean);
  for(const u of urls){try{const r=await fetch(u+(u.indexOf('?')<0?'?':'&')+'t='+Math.floor(Date.now()/60000),{cache:'no-store'});if(r.ok){const j=await r.json();DATA=j.data;DATA_TS=j.generated_at;LAST_LOAD=Date.now();return}}catch(e){}}
  throw new Error('no se pudo cargar data.json')}
 async function J(u){if(!DATA||Date.now()-LAST_LOAD>c_ref())await loadData();const v=DATA[u];if(v===undefined)throw new Error('falta '+u);return v}

@@ -1,5 +1,6 @@
 {
   "git": { "deploymentEnabled": { "data": false } },
+  "rewrites": [ { "source": "/live/data.json", "destination": "https://raw.githubusercontent.com/trendtiktokradar/trading-bot-panel/data/data.json" } ],
   "headers": [
     { "source": "/data.json", "headers": [ { "key": "Cache-Control", "value": "public, max-age=60" } ] },
     { "source": "/(.*)\\.(js|css|html)", "headers": [ { "key": "Cache-Control", "value": "public, max-age=300" } ] }
